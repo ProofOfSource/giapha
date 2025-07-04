@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === HELPER FUNCTIONS ===
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function isRole(role) {
+      return isSignedIn() && getUserData(request.auth.uid).role == role;
+    }
+
+    function isAdmin() {
+      return isRole('admin') || isRole('root_admin');
+    }
+
+    function isMember() {
+      return isRole('member');
+    }
+    
+    function isOwner(userId) {
+        return request.auth.uid == userId;
+    }
+
+    // === COLLECTION RULES ===
+
+    // --- USERS ---
+    match /users/{userId} {
+      // Allow any signed-in user to list users to find linked persons, but not read full documents.
+      allow list: if isSignedIn();
+      // Allow a user to read their own document, or an admin to read any document.
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isAdmin();
+    }
+
+    // --- PERSONS (Public and Private data are now combined) ---
+    match /persons/{personId} {
+      // Public can read/list person data to see the tree
+      allow read, list: if true;
+      
+      // Members can create their own person document
+      allow create: if (isMember() && request.auth.uid == personId) || isAdmin();
+      
+      // Admins can update any person. Members must use the updateFamilyMember cloud function.
+      allow update: if isAdmin();
+      
+      allow delete: if isAdmin();
+    }
+
+    // --- UNIONS ---
+    match /unions/{unionId} {
+      // Public can read union data to build the tree
+      allow read, list: if true;
+      // A member can create a union if they are one of the spouses
+      allow create: if (isMember() && (request.resource.data.husbandId == request.auth.uid || request.resource.data.wifeId == request.auth.uid)) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // --- PRIVATE PERSON DATA ---
+    match /private_person_data/{personId} {
+      // Members can read private data of other members, required for tree view
+      allow read: if isMember() || isAdmin();
+      // Only the user themselves or an admin can edit private data
+      allow update: if (isMember() && getUserData(request.auth.uid).personId == personId) || isAdmin();
+      allow create, delete: if isAdmin();
+    }
+
+    // --- STORIES (replaces posts) ---
+    match /stories/{storyId} {
+      allow read: if true;
+      allow create: if isMember() || isAdmin();
+      allow update: if (isMember() && request.resource.data.authorId == request.auth.uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // --- MEDIA ---
+    match /media/{mediaId} {
+      allow read: if resource.data.status == 'approved' || isAdmin();
+      allow create: if isMember() || isAdmin();
+      allow update: if isAdmin(); // Only admins can change status from 'pending' to 'approved'
+      allow delete: if isAdmin();
+    }
+  }
+}

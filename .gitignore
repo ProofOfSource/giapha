@@ -1,0 +1,42 @@
+# Tệp Log và dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Thư mục build của Vite
+dist
+.vite
+public
+
+# Tệp cấu hình môi trường
+.env
+.env.local
+.env.*.local
+
+# Tệp cấu hình Firebase nhạy cảm
+/firebase/config.js
+firebase.json
+.firebaserc
+/.firebase/*.*
+/src/firebase/
+
+# Tệp của hệ điều hành
+.DS_Store
+Thumbs.db
+
+# Tệp của trình biên tập mã
+.vscode/
+
+# Thư mục Cloud Functions
+/functions/node_modules
+/functions/.env*
+/functions/npm-debug.log*
+
+#Node module
+node_modules
+
+# Backup files
+*.bak
