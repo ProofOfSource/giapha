@@ -130,8 +130,8 @@ export default function AvatarManager({ personId, onSave, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 flex justify-center items-center p-4">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+        <div className="fixed inset-0 bg-gray-800 z-50 flex justify-center items-center p-4">
+            <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-lg w-full border-2 border-blue-500">
                 <h2 className="text-2xl font-bold mb-4">Cập nhật ảnh đại diện</h2>
                 <div className="space-y-4">
                     {/* Nút chọn tệp */}

@@ -46,7 +46,7 @@ const getResizedImageUrl = (url, size) => {
 
 const TreeNode = ({ nodeDatum, onNodeClick, isExpanded, size, nodeSize, isHighlighted }) => {
     const isDeceased = !!nodeDatum.deathDate;
-    const fullName = `${nodeDatum.name} ${nodeDatum.nickname ? `(${nodeDatum.nickname})` : ''}`;
+    const fullName = `${nodeDatum.name} ${nodeDatum.nickname ? `(${nodeDatum.nickname})` : ''}`.trim();
     const generation = nodeDatum.generation || 0;
     const branchColor = branchColorMap[generation % 6] || '#6b7280';
 

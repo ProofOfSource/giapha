@@ -23,6 +23,7 @@ firebase.json
 /.firebase/*.*
 /src/firebase/
 storage.rules
+firestore.rules
 
 # Tệp của hệ điều hành
 .DS_Store

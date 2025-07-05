@@ -253,8 +253,12 @@ const AdminManageTree = () => {
                         <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow max-h-[75vh] overflow-y-auto">
                             <ul>
                                 {persons.map(person => (
-                                    <li key={person.id} onClick={() => { setSelectedPerson(person); setIsAdding(false); }} className={`p-2 rounded cursor-pointer text-gray-800 dark:text-gray-200 hover:bg-amber-100 dark:hover:bg-gray-700 ${selectedPerson?.id === person.id ? 'bg-amber-200 dark:bg-amber-900' : ''}`}>
-                                        {person.name}
+                                    <li 
+                                        key={person.id} 
+                                        onClick={() => { setSelectedPerson(person); setIsAdding(false); }} 
+                                        className={`p-2 rounded cursor-pointer text-gray-800 dark:text-gray-200 hover:bg-amber-100 dark:hover:bg-gray-700 ${selectedPerson?.id === person.id ? 'bg-amber-200 dark:bg-amber-900 border-l-4 border-amber-500' : 'border-l-4 border-transparent'}`}
+                                    >
+                                        {`${person.name} ${person.nickname ? `(${person.nickname})` : ''}`.trim()}
                                     </li>
                                 ))}
                             </ul>
