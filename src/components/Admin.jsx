@@ -5,6 +5,7 @@ import AdminTreeView from './AdminTreeView.jsx';
 import SearchableDropdown from './SearchableDropdown.jsx';
 import ProposedChangesAdmin from './ProposedChangesAdmin.jsx';
 import AvatarManager from './AvatarManager.jsx';
+import AdminProposals from './AdminProposals'; // Import the new component
 
 const db = getFirestore(app);
 
@@ -89,24 +90,36 @@ const UserManagement = ({ persons }) => {
                                         {user.role}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex items-center gap-2">
+                                <td className="px-6 py-4 text-sm font-medium">
+                                    <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
                                         <select 
                                             onChange={(e) => handleRoleChange(user.id, e.target.value)} 
                                             value={user.role}
-                                            className="p-1 border border-gray-300 rounded bg-white dark:bg-gray-700 dark:border-gray-600"
+                                            className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700 dark:border-gray-600 text-gray-800 dark:text-gray-200"
                                             disabled={user.role === 'root_admin'}
                                         >
                                             <option value="pending">pending</option>
                                             <option value="member">member</option>
                                             <option value="admin">admin</option>
                                         </select>
-                                        <SearchableDropdown
-                                            options={persons}
-                                            value={user.personId}
-                                            onChange={(value) => handleLinkPerson(user.id, value)}
-                                            placeholder="Liên kết với Person..."
-                                        />
+                                        <div className="w-full md:w-64"> {/* Make it full width on small screens */}
+                                            <SearchableDropdown
+                                                options={persons}
+                                                value={user.personId}
+                                                onChange={(value) => handleLinkPerson(user.id, value)}
+                                                placeholder="Liên kết với Person..."
+                                                styles={{
+                                                    control: (provided, state) => ({
+                                                        ...provided,
+                                                        borderColor: state.isFocused ? '#2563eb' : provided.borderColor, // blue-600
+                                                        boxShadow: state.isFocused ? '0 0 0 1px #2563eb' : provided.boxShadow,
+                                                        '&:hover': {
+                                                            borderColor: state.isFocused ? '#2563eb' : provided.borderColor,
+                                                        },
+                                                    }),
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -449,6 +462,26 @@ const PersonEditor = ({ person, allPersons, allUnions, onSave, onDelete, onCance
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label className={labelStyle}>Họ và tên</label><input name="name" value={formData.name || ''} onChange={handleChange} className={inputStyle} /></div>
                 <div><label className={labelStyle}>Tên thường gọi</label><input name="nickname" value={formData.nickname || ''} onChange={handleChange} className={inputStyle} /></div>
+                {/* Thêm trường Cha */}
+                <div>
+                    <label className={labelStyle}>Cha</label>
+                    <SearchableDropdown
+                        options={allPersons}
+                        value={formData.fatherId}
+                        onChange={(value) => handleChange({ target: { name: 'fatherId', value: value } })}
+                        placeholder="Chọn cha..."
+                    />
+                </div>
+                {/* Thêm trường Mẹ */}
+                <div>
+                    <label className={labelStyle}>Mẹ</label>
+                    <SearchableDropdown
+                        options={allPersons}
+                        value={formData.motherId}
+                        onChange={(value) => handleChange({ target: { name: 'motherId', value: value } })}
+                        placeholder="Chọn mẹ..."
+                    />
+                </div>
                 <div><label className={labelStyle}>Ngày sinh (Dương)</label><input type="date" name="birthDate" value={formData.birthDate || ''} onChange={handleChange} className={inputStyle} /></div>
                 <div><label className={labelStyle}>Ngày sinh (Âm)</label><input type="text" name="lunarBirthDate" value={formData.lunarBirthDate || ''} onChange={handleChange} placeholder="VD: 15/10/Nhâm Dần" className={inputStyle} /></div>
                 <div><label className={labelStyle}>Ngày mất (Dương)</label><input type="date" name="deathDate" value={formData.deathDate || ''} onChange={handleChange} className={inputStyle} /></div>
@@ -465,6 +498,8 @@ const PersonEditor = ({ person, allPersons, allUnions, onSave, onDelete, onCance
                 <div><label className={labelStyle}>Email cá nhân</label><input type="email" name="contact.personalEmail" value={formData.contact.personalEmail || ''} onChange={handleChange} className={inputStyle} /></div>
                 <div><label className={labelStyle}>Số điện thoại</label><input type="tel" name="contact.phone" value={formData.contact.phone || ''} onChange={handleChange} className={inputStyle} /></div>
                 <div className="md:col-span-2"><label className={labelStyle}>Facebook</label><input name="contact.facebook" value={formData.contact.facebook || ''} onChange={handleChange} className={inputStyle} /></div>
+                <div className="md:col-span-2"><label className={labelStyle}>Thông tin khác</label><textarea name="otherInfo" value={formData.otherInfo || ''} onChange={handleChange} rows="3" className={inputStyle}></textarea></div>
+                
             </div>
 
             <div>
@@ -626,6 +661,9 @@ const AdminDashboard = ({ setActivePage }) => {
                  <button onClick={() => setActivePage('proposed-changes')} className="p-6 bg-purple-100 text-purple-800 rounded-lg shadow hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:hover:bg-purple-800 transition-colors">
                     <h3 className="font-bold text-lg">Duyệt Thay Đổi</h3>
                 </button>
+                 <button onClick={() => setActivePage('manage-proposals')} className="p-6 bg-teal-100 text-teal-800 rounded-lg shadow hover:bg-teal-200 dark:bg-teal-900 dark:text-teal-200 dark:hover:bg-teal-800 transition-colors">
+                    <h3 className="font-bold text-lg">Quản lý Đề xuất</h3>
+                </button>
             </div>
         </div>
     );
@@ -654,6 +692,7 @@ export const AdminPage = ({ adminSubPage, setAdminSubPage }) => {
         case 'manage-tree': return <AdminManageTree />;
         case 'manage-stories': return <AdminManageStories />;
         case 'proposed-changes': return <ProposedChangesAdmin />;
+        case 'manage-proposals': return <AdminProposals />; // Add case for AdminProposals
         default: return <AdminDashboard setActivePage={setAdminSubPage} />;
     }
 };

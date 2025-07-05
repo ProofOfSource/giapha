@@ -34,9 +34,12 @@ service cloud.firestore {
       // Allow any signed-in user to list users to find linked persons, but not read full documents.
       allow list: if isSignedIn();
       // Allow a user to read their own document, or an admin to read any document.
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      // Allow a user to create their own document.
       allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId);
+      // Allow a user to update their own document, or an admin to update any document.
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin());
+      // Only admins can delete user documents.
       allow delete: if isAdmin();
     }
 
