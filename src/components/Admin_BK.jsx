@@ -3,23 +3,14 @@ import { getFirestore, collection, onSnapshot, doc, setDoc, addDoc, deleteDoc, s
 import { app, auth } from '../firebase/config.js';
 import AdminTreeView from './AdminTreeView.jsx';
 import SearchableDropdown from './SearchableDropdown.jsx';
-import ProposedChangesAdmin from './ProposedChangesAdmin.jsx';
-import AvatarManager from './AvatarManager.jsx';
 
 const db = getFirestore(app);
 
-// ====================================================================
-// Component: UserManagement
-// Chức năng: Hiển thị danh sách người dùng, cho phép admin thay đổi vai trò
-// và liên kết tài khoản người dùng với một hồ sơ trong cây gia phả.
-// ====================================================================
 const UserManagement = ({ persons }) => {
-    // State để lưu danh sách người dùng từ Firestore
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // useEffect để lắng nghe thay đổi trong collection 'users' theo thời gian thực
     useEffect(() => {
         const usersCollection = collection(db, 'users');
         const unsubscribe = onSnapshot(usersCollection, (snapshot) => {
@@ -31,11 +22,9 @@ const UserManagement = ({ persons }) => {
             setLoading(false);
             console.error(err);
         });
-        // Dọn dẹp listener khi component bị unmount
         return () => unsubscribe();
     }, []);
 
-    // Xử lý khi admin thay đổi vai trò của người dùng
     const handleRoleChange = async (userId, newRole) => {
         const userRef = doc(db, 'users', userId);
         try {
@@ -46,7 +35,6 @@ const UserManagement = ({ persons }) => {
         }
     };
 
-    // Xử lý khi admin liên kết một tài khoản với một hồ sơ person
     const handleLinkPerson = async (userId, personId) => {
         const userRef = doc(db, 'users', userId);
         try {
@@ -65,7 +53,6 @@ const UserManagement = ({ persons }) => {
         <div className="p-8">
             <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-400 mb-4">Quản lý Thành viên</h2>
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-x-auto">
-                {/* Bảng hiển thị danh sách người dùng */}
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>
@@ -172,22 +159,12 @@ const AddPersonForm = ({ onAddPerson, onCancel, initialData = {} }) => {
     );
 };
 
-// ====================================================================
-// Component: AdminManageTree
-// Chức năng: Giao diện chính để quản lý cây gia phả, bao gồm việc
-// hiển thị danh sách thành viên và form chỉnh sửa (PersonEditor).
-// ====================================================================
 const AdminManageTree = () => {
-    // State cho chế độ xem (bảng hoặc cây)
     const [view, setView] = useState('table');
-    // State lưu danh sách tất cả thành viên
     const [persons, setPersons] = useState([]);
-    // State lưu thông tin của người đang được chọn để chỉnh sửa
     const [selectedPerson, setSelectedPerson] = useState(null);
-    // State cờ để xác định đang ở chế độ thêm mới hay chỉnh sửa
     const [isAdding, setIsAdding] = useState(false);
 
-    // Lắng nghe và cập nhật danh sách thành viên từ Firestore
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, 'persons'), (snapshot) => {
             setPersons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -195,9 +172,7 @@ const AdminManageTree = () => {
         return () => unsubscribe();
     }, []);
 
-    // Xử lý lưu thông tin (thêm mới hoặc cập nhật) của một thành viên
     const handleSavePerson = async (personData) => {
-        // Nếu đang chỉnh sửa, dùng ID có sẵn. Nếu thêm mới, tạo ID mới.
         const id = selectedPerson?.id || (isAdding ? doc(collection(db, 'persons')).id : null);
         if (!id) return;
         
@@ -205,12 +180,10 @@ const AdminManageTree = () => {
         await setDoc(personRef, personData, { merge: true });
         
         alert('Lưu thành công!');
-        // Reset state sau khi lưu
         setSelectedPerson(null);
         setIsAdding(false);
     };
 
-    // Xử lý xóa một thành viên
     const handleDeletePerson = async (personId) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa thành viên này?')) {
             await deleteDoc(doc(db, 'persons', personId));
@@ -221,12 +194,10 @@ const AdminManageTree = () => {
         }
     };
 
-    // Xác định đối tượng person đang hoạt động để truyền vào PersonEditor
     const activePerson = isAdding ? {} : selectedPerson;
 
     return (
         <div className="p-8">
-            {/* Header và các nút chuyển đổi */}
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-400">Quản lý Cây gia phả</h2>
                 <div>
@@ -241,7 +212,7 @@ const AdminManageTree = () => {
 
             {view === 'tree' ? <AdminTreeView /> : (
                 <div className="flex gap-8">
-                    {/* Cột trái: Danh sách thành viên */}
+                    {/* Left Column: List of Persons */}
                     <div className="w-1/3">
                         <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow max-h-[75vh] overflow-y-auto">
                             <ul>
@@ -254,7 +225,7 @@ const AdminManageTree = () => {
                         </div>
                     </div>
 
-                    {/* Cột phải: Form chỉnh sửa chi tiết */}
+                    {/* Right Column: Details and Edit Form */}
                     <div className="w-2/3">
                         {activePerson ? (
                             <PersonEditor 
@@ -278,131 +249,35 @@ const AdminManageTree = () => {
     );
 };
 
-// ====================================================================
-// Component: PersonEditor
-// Chức năng: Form chi tiết để admin thêm mới hoặc chỉnh sửa thông tin
-// của một thành viên trong cây gia phả.
-// ====================================================================
 const PersonEditor = ({ person, allPersons, onSave, onDelete, onCancel, isAdding }) => {
-    // State lưu dữ liệu của form, khởi tạo từ props `person`
-    const [formData, setFormData] = useState({
-        ...person,
-        contact: person.contact || {} // Đảm bảo `contact` luôn là một object
-    });
-    // State để điều khiển việc mở/đóng modal quản lý ảnh đại diện
-    const [isAvatarManagerOpen, setIsAvatarManagerOpen] = useState(false);
+    const [formData, setFormData] = useState(person);
 
-    // Cập nhật lại state của form khi `person` prop thay đổi
-    useEffect(() => {
-        setFormData({
-            ...person,
-            contact: person.contact || {}
-        });
-    }, [person]);
-
-    // Xử lý thay đổi trên các trường input
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        // Xử lý riêng cho các trường lồng trong object `contact`
-        if (name.startsWith("contact.")) {
-            const field = name.split(".")[1];
-            setFormData(prev => ({
-                ...prev,
-                contact: { ...prev.contact, [field]: value }
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: type === 'checkbox' ? checked : value
-            }));
-        }
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Xử lý khi submit form, gọi hàm onSave từ component cha
     const handleSubmit = (e) => {
         e.preventDefault();
         onSave(formData);
     };
 
-    // Xử lý khi ảnh đại diện được tải lên thành công từ AvatarManager
-    const handleAvatarSave = async (newUrl) => {
-        if (!person.id) return;
-        
-        // Cập nhật state cục bộ ngay lập tức để người dùng thấy thay đổi
-        setFormData(prev => ({ ...prev, profilePictureUrl: newUrl }));
-
-        // Cập nhật thẳng vào tài liệu Firestore
-        const personRef = doc(db, 'persons', person.id);
-        try {
-            await setDoc(personRef, { profilePictureUrl: newUrl }, { merge: true });
-        } catch (error) {
-            console.error("Lỗi khi cập nhật ảnh đại diện:", error);
-            alert("Không thể lưu ảnh đại diện vào cơ sở dữ liệu.");
-            // Nếu lỗi, có thể cân nhắc khôi phục lại ảnh cũ
-            setFormData(prev => ({ ...prev, profilePictureUrl: person.profilePictureUrl }));
-        }
-    };
-
-    const inputStyle = "w-full p-2 border rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200";
-    const labelStyle = "block text-sm font-medium text-gray-700 dark:text-gray-300";
+    const inputStyle = "p-2 border rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200";
 
     return (
         <form onSubmit={handleSubmit} className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow space-y-4">
             <h2 className="text-xl font-bold mb-4 dark:text-gray-100">{isAdding ? 'Thêm thành viên mới' : `Chỉnh sửa: ${person.name}`}</h2>
             
-            {/* Vùng quản lý ảnh đại diện */}
-            <div className="flex flex-col items-center gap-2 mb-4">
-                <img 
-                    src={formData.profilePictureUrl || 'https://placehold.co/100'} 
-                    alt="Avatar" 
-                    className="rounded-full object-cover border" 
-                    style={{ width: '96px', height: '96px' }}
-                />
-                <button 
-                    type="button" 
-                    onClick={() => {
-                        if (!isAdding && person.id) {
-                            setIsAvatarManagerOpen(true);
-                        }
-                    }} 
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                    disabled={isAdding || !person.id}
-                >
-                    Thay đổi ảnh
-                </button>
-            </div>
-            {/* Thông báo cho người dùng khi đang ở chế độ thêm mới */}
-            {(isAdding || !person.id) && <p className="text-sm text-yellow-600 -mt-4 mb-4">Bạn cần lưu thành viên trước khi thêm ảnh đại diện.</p>}
-
-            {/* Render modal AvatarManager khi cần */}
-            {isAvatarManagerOpen && person.id && (
-                <AvatarManager
-                    personId={person.id}
-                    onSave={handleAvatarSave}
-                    onClose={() => setIsAvatarManagerOpen(false)}
-                />
-            )}
-            
-            {/* Các trường thông tin chi tiết */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label className={labelStyle}>Họ và tên</label><input name="name" value={formData.name || ''} onChange={handleChange} className={inputStyle} /></div>
-                <div><label className={labelStyle}>Tên thường gọi</label><input name="nickname" value={formData.nickname || ''} onChange={handleChange} className={inputStyle} /></div>
-                <div><label className={labelStyle}>Ngày sinh (Dương)</label><input type="date" name="birthDate" value={formData.birthDate || ''} onChange={handleChange} className={inputStyle} /></div>
-                <div><label className={labelStyle}>Ngày sinh (Âm)</label><input type="text" name="lunarBirthDate" value={formData.lunarBirthDate || ''} onChange={handleChange} placeholder="VD: 15/10/Nhâm Dần" className={inputStyle} /></div>
-                <div><label className={labelStyle}>Ngày mất (Dương)</label><input type="date" name="deathDate" value={formData.deathDate || ''} onChange={handleChange} className={inputStyle} /></div>
-                <div><label className={labelStyle}>Ngày mất (Âm)</label><input type="text" name="lunarDeathDate" value={formData.lunarDeathDate || ''} onChange={handleChange} placeholder="VD: 01/01/Giáp Thìn" className={inputStyle} /></div>
-                <div>
-                    <label className={labelStyle}>Giới tính</label>
-                    <select name="gender" value={formData.gender || 'other'} onChange={handleChange} className={inputStyle}>
-                        <option value="male">Nam</option>
-                        <option value="female">Nữ</option>
-                        <option value="other">Khác</option>
-                    </select>
-                </div>
-                <div><label className={labelStyle}>Nơi ở hiện tại</label><input name="currentAddress" value={formData.currentAddress || ''} onChange={handleChange} className={inputStyle} /></div>
-                <div><label className={labelStyle}>Email cá nhân</label><input type="email" name="contact.personalEmail" value={formData.contact.personalEmail || ''} onChange={handleChange} className={inputStyle} /></div>
-                <div><label className={labelStyle}>Số điện thoại</label><input type="tel" name="contact.phone" value={formData.contact.phone || ''} onChange={handleChange} className={inputStyle} /></div>
-                <div className="md:col-span-2"><label className={labelStyle}>Facebook</label><input name="contact.facebook" value={formData.contact.facebook || ''} onChange={handleChange} className={inputStyle} /></div>
+            <div className="grid grid-cols-2 gap-4">
+                <input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Họ và tên" className={inputStyle} />
+                <input name="nickname" value={formData.nickname || ''} onChange={handleChange} placeholder="Tên húy" className={inputStyle} />
+                <select name="gender" value={formData.gender || 'other'} onChange={handleChange} className={inputStyle}>
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
+                    <option value="other">Khác</option>
+                </select>
+                <input name="birthDate" value={formData.birthDate || ''} onChange={handleChange} placeholder="Ngày sinh" className={inputStyle} />
+                <input name="deathDate" value={formData.deathDate || ''} onChange={handleChange} placeholder="Ngày mất" className={inputStyle} />
             </div>
 
             <div>
@@ -414,15 +289,9 @@ const PersonEditor = ({ person, allPersons, onSave, onDelete, onCancel, isAdding
                 <SearchableDropdown options={allPersons.filter(p => p.gender === 'female')} value={formData.motherId} onChange={val => setFormData(p => ({...p, motherId: val}))} placeholder="Chọn mẹ..." />
             </div>
             
-            <div><label className={labelStyle}>Tiểu sử</label><textarea name="biography" value={formData.biography || ''} onChange={handleChange} rows="3" className={inputStyle}></textarea></div>
-            <div><label className={labelStyle}>Thành tựu</label><textarea name="achievements" value={formData.achievements || ''} onChange={handleChange} rows="3" className={inputStyle}></textarea></div>
-
-            <div className="flex items-center gap-2">
-                <input type="checkbox" name="isDeceased" checked={formData.isDeceased || false} onChange={handleChange} className="h-4 w-4 rounded" />
-                <label className={labelStyle}>Đã qua đời</label>
-            </div>
+            <textarea name="biography" value={formData.biography || ''} onChange={handleChange} placeholder="Tiểu sử" className={`w-full ${inputStyle}`}></textarea>
             
-            <div className="flex justify-between items-center pt-4">
+            <div className="flex justify-between items-center">
                 <div>
                     <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Lưu thay đổi</button>
                     <button type="button" onClick={onCancel} className="ml-2 bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Hủy</button>
@@ -433,10 +302,6 @@ const PersonEditor = ({ person, allPersons, onSave, onDelete, onCancel, isAdding
     );
 };
 
-// ====================================================================
-// Component: AdminManageStories
-// Chức năng: Giao diện cho admin để tạo và xóa các bài đăng, câu chuyện.
-// ====================================================================
 const AdminManageStories = () => {
     const [stories, setStories] = useState([]);
     const [title, setTitle] = useState('');
@@ -520,10 +385,6 @@ const AdminManageStories = () => {
     );
 };
 
-// ====================================================================
-// Component: AdminDashboard
-// Chức năng: Bảng điều khiển chính của trang admin, chứa các nút điều hướng.
-// ====================================================================
 const AdminDashboard = ({ setActivePage }) => {
     return (
         <div className="p-8">
@@ -538,23 +399,14 @@ const AdminDashboard = ({ setActivePage }) => {
                 <button onClick={() => setActivePage('manage-stories')} className="p-6 bg-yellow-100 text-yellow-800 rounded-lg shadow hover:bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:hover:bg-yellow-800 transition-colors">
                     <h3 className="font-bold text-lg">Quản lý Ký ức</h3>
                 </button>
-                 <button onClick={() => setActivePage('proposed-changes')} className="p-6 bg-purple-100 text-purple-800 rounded-lg shadow hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:hover:bg-purple-800 transition-colors">
-                    <h3 className="font-bold text-lg">Duyệt Thay Đổi</h3>
-                </button>
             </div>
         </div>
     );
 };
 
-// ====================================================================
-// Component: AdminPage (Component chính)
-// Chức năng: Đóng vai trò là "bộ định tuyến" cho các trang con trong khu vực admin.
-// Sử dụng một câu lệnh switch để render component tương ứng với `adminSubPage`.
-// ====================================================================
 export const AdminPage = ({ adminSubPage, setAdminSubPage }) => {
     const [persons, setPersons] = useState([]);
 
-    // Tải danh sách persons một lần ở đây và truyền xuống các component con nếu cần
     useEffect(() => {
         const personsCollection = collection(db, 'persons');
         const unsubscribe = onSnapshot(personsCollection, (snapshot) => {
@@ -568,7 +420,6 @@ export const AdminPage = ({ adminSubPage, setAdminSubPage }) => {
         case 'user-management': return <UserManagement persons={persons} />;
         case 'manage-tree': return <AdminManageTree />;
         case 'manage-stories': return <AdminManageStories />;
-        case 'proposed-changes': return <ProposedChangesAdmin />;
         default: return <AdminDashboard setActivePage={setAdminSubPage} />;
     }
 };

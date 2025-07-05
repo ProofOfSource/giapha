@@ -62,11 +62,24 @@ const TreeNode = ({ nodeDatum, onNodeClick, isExpanded, size, nodeSize, isHighli
 
     // Expanded View
     if (isExpanded) {
-        const expandedAvatarUrl = getResizedImageUrl(nodeDatum.profilePictureUrl, '200x200');
+        const [imageUrl, setImageUrl] = useState(getResizedImageUrl(nodeDatum.profilePictureUrl, '200x200'));
+
+        useEffect(() => {
+            const resizedUrl = getResizedImageUrl(nodeDatum.profilePictureUrl, '200x200');
+            if (resizedUrl) {
+                const img = new Image();
+                img.src = resizedUrl;
+                img.onload = () => setImageUrl(resizedUrl);
+                img.onerror = () => setImageUrl(nodeDatum.profilePictureUrl); // Fallback to original
+            } else {
+                setImageUrl(null);
+            }
+        }, [nodeDatum.profilePictureUrl]);
+
         const expandedNodeStyle = {
             ...nodeStyle,
             width: nodeSize.x,
-            height: nodeSize.y, // Use y for height
+            height: nodeSize.y,
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
@@ -77,16 +90,14 @@ const TreeNode = ({ nodeDatum, onNodeClick, isExpanded, size, nodeSize, isHighli
                 <div
                     style={{
                         flexGrow: 1,
-                        backgroundImage: `url(${expandedAvatarUrl})`,
+                        backgroundImage: `url(${imageUrl})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         borderTopLeftRadius: '8px',
                         borderTopRightRadius: '8px',
-                        boxShadow: isHighlighted ? '0 0 15px 3px #f59e0b' : '0 2px 8px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',      
-                        borderRight: isHighlighted ? '4px solid #f59e0b' : 'none',
                     }}
                 >
-                    {!nodeDatum.profilePictureUrl && (
+                    {!imageUrl && (
                         <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-t-lg">
                             <Icons.user className="w-16 h-16 text-gray-400" />
                         </div>

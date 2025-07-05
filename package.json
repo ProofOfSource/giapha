@@ -22,6 +22,7 @@
     "react-d3-tree": "^3.6.6",
     "react-dom": "^19.1.0",
     "react-firebase-hooks": "^5.1.1",
+    "react-image-crop": "^11.0.10",
     "react-leaflet": "^5.0.0",
     "react-organizational-chart": "^2.2.1",
     "react-select": "^5.10.1",

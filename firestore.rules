@@ -34,7 +34,7 @@ service cloud.firestore {
       // Allow any signed-in user to list users to find linked persons, but not read full documents.
       allow list: if isSignedIn();
       // Allow a user to read their own document, or an admin to read any document.
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow read: if isSignedIn();
       allow create: if isSignedIn() && isOwner(userId);
       allow update: if isSignedIn() && isOwner(userId);
       allow delete: if isAdmin();
@@ -48,8 +48,9 @@ service cloud.firestore {
       // Members can create their own person document
       allow create: if (isMember() && request.auth.uid == personId) || isAdmin();
       
-      // Admins can update any person. Members must use the updateFamilyMember cloud function.
-      allow update: if isAdmin();
+      // Admins can update any person. 
+      // Members can update their own person document.
+      allow update: if isAdmin() || (isMember() && getUserData(request.auth.uid).personId == personId);
       
       allow delete: if isAdmin();
     }
@@ -78,6 +79,18 @@ service cloud.firestore {
       allow create: if isMember() || isAdmin();
       allow update: if (isMember() && request.resource.data.authorId == request.auth.uid) || isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // --- PROPOSED CHANGES ---
+    match /proposed_changes/{changeId} {
+      // Only admins can list all proposals
+      allow list: if isAdmin();
+      // Admins can read any proposal. Members can read their own proposals.
+      allow read: if isAdmin() || (isMember() && resource.data.proposerId == request.auth.uid);
+      // Members can create proposals
+      allow create: if isMember();
+      // Only admins can update (approve/reject) or delete proposals
+      allow update, delete: if isAdmin();
     }
 
     // --- MEDIA ---

@@ -124,6 +124,7 @@ export default function FamilyManager({ user, personData }) {
                     person={editingPerson}
                     onClose={() => setEditingPerson(null)}
                     onSave={handleSave}
+                    submissionMode="propose"
                 />
             )}
         </div>

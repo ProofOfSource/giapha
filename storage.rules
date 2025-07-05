@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check for admin role from Firestore
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role IN ['admin', 'root_admin'];
+    }
+
+    // Allow public read for all files in the 'avatars' folder
+    match /avatars/{allPaths=**} {
+      allow read: if true;
+    }
+
+    // Allow authenticated admins to write to the 'avatars' folder
+    match /avatars/{personId}/{fileName} {
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    // Allow public read for all other files (e.g., story covers)
+    match /{allPaths=**} {
+        allow read: if true;
+    }
+  }
+}

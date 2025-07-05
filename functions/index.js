@@ -197,3 +197,64 @@ exports.updateFamilyMember = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("internal", "Không thể cập nhật thông tin.");
     }
 });
+
+// 6. Hàm để một thành viên đề xuất thay đổi thông tin
+exports.proposeChange = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Bạn phải đăng nhập để thực hiện hành động này.");
+    }
+
+    const { targetPersonId, changedData, proposerNote } = data;
+    const proposerId = context.auth.uid;
+
+    if (!targetPersonId || !changedData) {
+        throw new functions.https.HttpsError("invalid-argument", "Cần cung cấp targetPersonId và changedData.");
+    }
+
+    try {
+        await db.collection("proposed_changes").add({
+            proposerId,
+            targetPersonId,
+            changedData,
+            proposerNote: proposerNote || "",
+            status: "pending",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return { success: true, message: "Đề xuất của bạn đã được gửi đi." };
+    } catch (error) {
+        functions.logger.error("Lỗi khi tạo đề xuất:", error);
+        throw new functions.https.HttpsError("internal", "Không thể tạo đề xuất thay đổi.");
+    }
+});
+
+// 7. Hàm được kích hoạt khi một đề xuất được cập nhật (phê duyệt/từ chối)
+exports.handleProposedChangeApproval = functions.firestore
+    .document('proposed_changes/{changeId}')
+    .onUpdate(async (change, context) => {
+        const newValue = change.after.data();
+        const previousValue = change.before.data();
+
+        // Chỉ hành động khi trạng thái thay đổi thành 'approved'
+        if (newValue.status === 'approved' && previousValue.status !== 'approved') {
+            const { targetPersonId, changedData } = newValue;
+
+            if (!targetPersonId || !changedData) {
+                functions.logger.error("Thiếu targetPersonId hoặc changedData trong đề xuất:", context.params.changeId);
+                return null;
+            }
+
+            const personRef = db.collection('persons').doc(targetPersonId);
+
+            try {
+                await personRef.set(changedData, { merge: true });
+                functions.logger.info(`Đã áp dụng thay đổi cho person ${targetPersonId} từ đề xuất ${context.params.changeId}`);
+                return null;
+            } catch (error) {
+                functions.logger.error(`Lỗi khi áp dụng thay đổi cho person ${targetPersonId}:`, error);
+                // Cân nhắc: có thể cập nhật lại trạng thái đề xuất thành 'failed'
+                await change.after.ref.update({ status: 'failed', error: error.message });
+                return null;
+            }
+        }
+        return null;
+    });

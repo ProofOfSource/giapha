@@ -19,8 +19,13 @@ export default function ProfileEditor({ user, userData, personData }) {
             nickname: personData?.nickname || '',
             biography: personData?.biography || '',
             birthDate: personData?.birthDate || '',
+            lunarBirthDate: personData?.lunarBirthDate || '',
+            deathDate: personData?.deathDate || '',
+            lunarDeathDate: personData?.lunarDeathDate || '',
             currentAddress: personData?.currentAddress || '',
             facebook: personData?.contact?.facebook || '',
+            personalEmail: personData?.contact?.personalEmail || '',
+            phone: personData?.contact?.phone || '',
             achievements: personData?.achievements || '',
             gender: personData?.gender || 'other',
             isDeceased: personData?.isDeceased || false,
@@ -52,20 +57,29 @@ export default function ProfileEditor({ user, userData, personData }) {
             // 2. Update 'persons' document if linked
             if (personData?.id) {
                 const personRef = doc(db, 'persons', personData.id);
-                await updateDoc(personRef, {
+                
+                // Construct the data to be updated
+                const updatedData = {
                     name: formData.name,
                     nickname: formData.nickname,
                     biography: formData.biography,
                     birthDate: formData.birthDate,
+                    lunarBirthDate: formData.lunarBirthDate,
+                    deathDate: formData.deathDate,
+                    lunarDeathDate: formData.lunarDeathDate,
                     currentAddress: formData.currentAddress,
                     contact: {
-                        ...(personData.contact || {}),
+                        ...(personData.contact || {}), // Preserve other contact fields
                         facebook: formData.facebook,
+                        personalEmail: formData.personalEmail,
+                        phone: formData.phone,
                     },
                     achievements: formData.achievements,
                     gender: formData.gender,
                     isDeceased: formData.isDeceased,
-                });
+                };
+
+                await updateDoc(personRef, updatedData);
             }
             setSuccess("Cập nhật thông tin thành công!");
         } catch (err) {
@@ -109,8 +123,20 @@ export default function ProfileEditor({ user, userData, personData }) {
                             <input type="text" name="nickname" value={formData.nickname} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
                         </div>
                          <div>
-                            <label className="block text-sm font-medium text-gray-600">Ngày sinh</label>
-                            <input type="text" name="birthDate" placeholder="YYYY-MM-DD" value={formData.birthDate} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
+                            <label className="block text-sm font-medium text-gray-600">Ngày sinh (Dương)</label>
+                            <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Ngày sinh (Âm)</label>
+                            <input type="text" name="lunarBirthDate" placeholder="VD: 15/10/Nhâm Dần" value={formData.lunarBirthDate} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Ngày mất (Dương)</label>
+                            <input type="date" name="deathDate" value={formData.deathDate} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600">Ngày mất (Âm)</label>
+                            <input type="text" name="lunarDeathDate" placeholder="VD: 01/01/Giáp Thìn" value={formData.lunarDeathDate} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-600">Giới tính</label>
@@ -121,16 +147,16 @@ export default function ProfileEditor({ user, userData, personData }) {
                             </select>
                         </div>
                         <div>
+                            <label className="block text-sm font-medium text-gray-600">Nơi sinh sống hiện tại</label>
+                            <input type="text" name="currentAddress" value={formData.currentAddress} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
+                        </div>
+                        <div>
                             <label className="block text-sm font-medium text-gray-600">Email cá nhân</label>
                             <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
                         </div>
                          <div>
                             <label className="block text-sm font-medium text-gray-600">Số điện thoại</label>
                             <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-600">Nơi sinh sống hiện tại</label>
-                            <input type="text" name="currentAddress" value={formData.currentAddress} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-600">Tài khoản Facebook</label>

@@ -81,8 +81,10 @@ const PersonDetailsModal = ({ personId, onClose, canEdit }) => {
                         {person.nickname && <p className="text-lg text-gray-600 mb-4">({person.nickname})</p>}
                         
                         <div className="space-y-2">
-                            <p><strong>Ngày sinh:</strong> {person.birthDate || 'Chưa có thông tin'}</p>
-                            {person.isDeceased && <p><strong>Ngày mất:</strong> {person.deathDate || 'Chưa có thông tin'}</p>}
+                            <p><strong>Ngày sinh (Dương):</strong> {person.birthDate || 'Chưa có thông tin'}</p>
+                            <p><strong>Ngày sinh (Âm):</strong> {person.lunarBirthDate || 'Chưa có thông tin'}</p>
+                            {person.isDeceased && <p><strong>Ngày mất (Dương):</strong> {person.deathDate || 'Chưa có thông tin'}</p>}
+                            {person.isDeceased && <p><strong>Ngày mất (Âm):</strong> {person.lunarDeathDate || 'Chưa có thông tin'}</p>}
                             <p><strong>Nơi ở hiện tại:</strong> {person.currentAddress || 'Chưa có thông tin'}</p>
                             
                             {person.biography && <p className="pt-2"><strong>Tiểu sử:</strong> {person.biography}</p>}
