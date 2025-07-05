@@ -182,17 +182,24 @@ const AdminManageTree = () => {
     const [view, setView] = useState('table');
     // State lưu danh sách tất cả thành viên
     const [persons, setPersons] = useState([]);
+    const [unions, setUnions] = useState([]);
     // State lưu thông tin của người đang được chọn để chỉnh sửa
     const [selectedPerson, setSelectedPerson] = useState(null);
     // State cờ để xác định đang ở chế độ thêm mới hay chỉnh sửa
     const [isAdding, setIsAdding] = useState(false);
 
-    // Lắng nghe và cập nhật danh sách thành viên từ Firestore
+    // Lắng nghe và cập nhật danh sách thành viên và hôn nhân từ Firestore
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'persons'), (snapshot) => {
+        const unsubPersons = onSnapshot(collection(db, 'persons'), (snapshot) => {
             setPersons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });
-        return () => unsubscribe();
+        const unsubUnions = onSnapshot(collection(db, 'unions'), (snapshot) => {
+            setUnions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => {
+            unsubPersons();
+            unsubUnions();
+        };
     }, []);
 
     // Xử lý lưu thông tin (thêm mới hoặc cập nhật) của một thành viên
@@ -261,6 +268,7 @@ const AdminManageTree = () => {
                                 key={activePerson.id || 'new'}
                                 person={activePerson}
                                 allPersons={persons}
+                                allUnions={unions}
                                 onSave={handleSavePerson}
                                 onDelete={handleDeletePerson}
                                 onCancel={() => { setSelectedPerson(null); setIsAdding(false); }}
@@ -283,14 +291,33 @@ const AdminManageTree = () => {
 // Chức năng: Form chi tiết để admin thêm mới hoặc chỉnh sửa thông tin
 // của một thành viên trong cây gia phả.
 // ====================================================================
-const PersonEditor = ({ person, allPersons, onSave, onDelete, onCancel, isAdding }) => {
+const PersonEditor = ({ person, allPersons, allUnions, onSave, onDelete, onCancel, isAdding }) => {
     // State lưu dữ liệu của form, khởi tạo từ props `person`
     const [formData, setFormData] = useState({
         ...person,
         contact: person.contact || {} // Đảm bảo `contact` luôn là một object
     });
+    const [spouses, setSpouses] = useState([]);
+    const [newSpouseId, setNewSpouseId] = useState('');
     // State để điều khiển việc mở/đóng modal quản lý ảnh đại diện
     const [isAvatarManagerOpen, setIsAvatarManagerOpen] = useState(false);
+
+    // Tìm và cập nhật danh sách vợ/chồng khi person hoặc unions thay đổi
+    useEffect(() => {
+        if (person.id && allUnions.length > 0) {
+            const currentSpouses = allUnions
+                .filter(u => u.husbandId === person.id || u.wifeId === person.id)
+                .map(u => {
+                    const spouseId = u.husbandId === person.id ? u.wifeId : u.husbandId;
+                    const spouseData = allPersons.find(p => p.id === spouseId);
+                    return { ...spouseData, unionId: u.id };
+                });
+            setSpouses(currentSpouses);
+        } else {
+            setSpouses([]);
+        }
+    }, [person, allUnions, allPersons]);
+
 
     // Cập nhật lại state của form khi `person` prop thay đổi
     useEffect(() => {
@@ -340,6 +367,37 @@ const PersonEditor = ({ person, allPersons, onSave, onDelete, onCancel, isAdding
             alert("Không thể lưu ảnh đại diện vào cơ sở dữ liệu.");
             // Nếu lỗi, có thể cân nhắc khôi phục lại ảnh cũ
             setFormData(prev => ({ ...prev, profilePictureUrl: person.profilePictureUrl }));
+        }
+    };
+
+    const handleAddSpouse = async () => {
+        if (!newSpouseId || !person.id) {
+            alert("Vui lòng chọn một người để thêm làm vợ/chồng.");
+            return;
+        }
+        const newUnion = person.gender === 'male' 
+            ? { husbandId: person.id, wifeId: newSpouseId }
+            : { husbandId: newSpouseId, wifeId: person.id };
+        
+        try {
+            await addDoc(collection(db, 'unions'), newUnion);
+            alert("Thêm vợ/chồng thành công.");
+            setNewSpouseId(''); // Reset dropdown
+        } catch (error) {
+            console.error("Lỗi khi thêm vợ/chồng:", error);
+            alert("Đã có lỗi xảy ra.");
+        }
+    };
+
+    const handleRemoveSpouse = async (unionId) => {
+        if (window.confirm("Bạn có chắc chắn muốn xóa mối quan hệ hôn nhân này?")) {
+            try {
+                await deleteDoc(doc(db, 'unions', unionId));
+                alert("Xóa thành công.");
+            } catch (error) {
+                console.error("Lỗi khi xóa vợ/chồng:", error);
+                alert("Đã có lỗi xảy ra.");
+            }
         }
     };
 
@@ -406,16 +464,39 @@ const PersonEditor = ({ person, allPersons, onSave, onDelete, onCancel, isAdding
             </div>
 
             <div>
-                <label className="font-semibold dark:text-gray-300">Cha</label>
-                <SearchableDropdown options={allPersons.filter(p => p.gender === 'male')} value={formData.fatherId} onChange={val => setFormData(p => ({...p, fatherId: val}))} placeholder="Chọn cha..." />
+                <label className={labelStyle}>Cha</label>
+                <SearchableDropdown options={allPersons.filter(p => p.gender !== 'female')} value={formData.fatherId} onChange={val => setFormData(p => ({...p, fatherId: val}))} placeholder="Chọn cha..." />
             </div>
             <div>
-                <label className="font-semibold dark:text-gray-300">Mẹ</label>
-                <SearchableDropdown options={allPersons.filter(p => p.gender === 'female')} value={formData.motherId} onChange={val => setFormData(p => ({...p, motherId: val}))} placeholder="Chọn mẹ..." />
+                <label className={labelStyle}>Mẹ</label>
+                <SearchableDropdown options={allPersons.filter(p => p.gender !== 'male')} value={formData.motherId} onChange={val => setFormData(p => ({...p, motherId: val}))} placeholder="Chọn mẹ..." />
+            </div>
+
+            <div className="border-t pt-4 mt-4">
+                <h3 className="text-lg font-semibold mb-2 dark:text-gray-200">Vợ/Chồng</h3>
+                {spouses.map(spouse => (
+                    <div key={spouse.id} className="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-2 rounded mb-2">
+                        <span className="dark:text-gray-300">{spouse.name}</span>
+                        <button type="button" onClick={() => handleRemoveSpouse(spouse.unionId)} className="text-red-500 hover:text-red-700">Xóa</button>
+                    </div>
+                ))}
+                <div className="flex items-center gap-2 mt-2">
+                    <div className="flex-grow">
+                        <SearchableDropdown
+                            options={allPersons.filter(p => p.id !== person.id && !spouses.some(s => s.id === p.id))}
+                            value={newSpouseId}
+                            onChange={setNewSpouseId}
+                            placeholder="Thêm vợ/chồng..."
+                        />
+                    </div>
+                    <button type="button" onClick={handleAddSpouse} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">+</button>
+                </div>
             </div>
             
             <div><label className={labelStyle}>Tiểu sử</label><textarea name="biography" value={formData.biography || ''} onChange={handleChange} rows="3" className={inputStyle}></textarea></div>
             <div><label className={labelStyle}>Thành tựu</label><textarea name="achievements" value={formData.achievements || ''} onChange={handleChange} rows="3" className={inputStyle}></textarea></div>
+            
+            <div className="md:col-span-2"><label className={labelStyle}>Nơi chôn cất</label><input name="burialPlace" value={formData.burialPlace || ''} onChange={handleChange} className={inputStyle} /></div>
 
             <div className="flex items-center gap-2">
                 <input type="checkbox" name="isDeceased" checked={formData.isDeceased || false} onChange={handleChange} className="h-4 w-4 rounded" />

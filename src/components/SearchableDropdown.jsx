@@ -1,15 +1,15 @@
 import React from 'react';
 import Select from 'react-select';
 
-const SearchableDropdown = ({ options, value, onSelect, placeholder, displayField, disabled }) => {
+const SearchableDropdown = ({ options, value, onChange, placeholder, displayField, disabled }) => {
     const selectOptions = options.map(opt => ({
         value: opt.id,
         label: `${opt[displayField] || opt.name} (${opt.birthDate || 'N/A'})`
     }));
 
     const handleChange = (selectedOption) => {
-        if (onSelect) {
-            onSelect(selectedOption ? selectedOption.value : '');
+        if (onChange) {
+            onChange(selectedOption ? selectedOption.value : '');
         }
     };
 
