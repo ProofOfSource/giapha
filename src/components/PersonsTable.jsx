@@ -57,7 +57,9 @@ const PersonsTable = ({
                 onClick={() => setHighlightedNodeId(person.id)}
                 className={`p-3 border rounded-lg shadow-sm cursor-pointer ${highlightClass}`}
             >
-                <div className="font-bold text-md text-gray-900 truncate">{person.name}</div>
+                <div className="font-bold text-md text-gray-900 truncate">
+                    {person.name}{person.nickname ? ` (${person.nickname})` : ''}
+                </div>
                 <div className="mt-2 space-y-1 text-sm">
                     {visibleColumns.fatherName && (
                         <div className="flex justify-between">
@@ -130,7 +132,9 @@ const PersonsTable = ({
                                                     onClick={() => setHighlightedNodeId(person.id)}
                                                     className={`cursor-pointer border-b border-gray-200 ${isHighlighted ? '' : 'bg-white hover:bg-gray-50'}`}
                                                 >
-                                                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 truncate">{person.name}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 truncate">
+                                                        {person.name}{person.nickname ? ` (${person.nickname})` : ''}
+                                                    </td>
                                                     {visibleColumns.fatherName && <td className="px-6 py-4 whitespace-nowrap text-gray-600">{father ? father.name : 'Không rõ'}</td>}
                                                     {visibleColumns.birthDate && <td className="px-6 py-4 whitespace-nowrap text-gray-600">{person.birthDate || 'Không rõ'}</td>}
                                                     {visibleColumns.status && <td className="px-6 py-4 whitespace-nowrap">

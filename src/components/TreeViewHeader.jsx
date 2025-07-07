@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import SearchBar from './SearchBar.jsx';
 import ActionButton from './common/ActionButton.jsx';
 import SearchableDropdown from './SearchableDropdown.jsx';
-import { List, Network, ArrowDownUp, ArrowLeftRight, Settings, Filter, ChevronDown, ArrowUpNarrowWide } from 'lucide-react';
+import { List, Network, ArrowDownUp, ArrowLeftRight, Settings, Filter, ChevronDown, ArrowUpNarrowWide, X } from 'lucide-react';
 import { Icons } from './Icons.jsx';
 
 // --- Redesigned Components ---
@@ -162,58 +162,61 @@ const TreeViewHeader = (props) => {
         fatherFilter, setFatherFilter,
         toggleAllGroups, allGroupsOpen,
         visibleColumns, setVisibleColumns,
-        onShowAll
+        onShowAll,
+        shrink = false,
+        onHideHeader,
+        showAdvancedFilters = false,
+        setShowAdvancedFilters = () => {}
     } = props;
 
-    return (
-        <div className="p-3 sm:p-4 bg-white shadow-md rounded-lg">
-            <div className="flex flex-col lg:flex-row items-stretch gap-4">
-                
-                {/* --- Toolbar --- */}
-                <div className="flex items-stretch flex-wrap gap-4">
-                    <ControlGroup label="Bộ lọc">
-                        <GlobalFilters 
-                            generations={generations}
-                            onGenerationChange={onGenerationChange}
-                            onDirectLineToggle={onDirectLineToggle}
-                            directLineActive={directLineActive}
-                            onShowAll={onShowAll}
-                        />
-                    </ControlGroup>
-                    
-                    <ControlGroup label="Chế độ xem">
-                        <ViewModeToggle currentView={currentView} onViewChange={onViewChange} />
-                        
-                        {currentView === 'tree' && (
-                            <TreeOrientationToggle 
-                                currentOrientation={currentOrientation}
-                                onOrientationChange={onOrientationChange}
-                            />
-                        )}
-                        
-                        {currentView === 'table' && (
-                            <TableControls 
-                                persons={persons}
-                                fatherFilter={fatherFilter}
-                                setFatherFilter={setFatherFilter}
-                                toggleAllGroups={toggleAllGroups}
-                                allGroupsOpen={allGroupsOpen}
-                                visibleColumns={visibleColumns}
-                                setVisibleColumns={setVisibleColumns}
-                            />
-                        )}
-                    </ControlGroup>
-                </div>
+    // Responsive: gom các nút vào 1 hàng trên mobile
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const headerClass = `bg-white shadow-md rounded-lg transition-all duration-300 ${shrink ? 'py-1 sm:py-2' : 'p-3 sm:p-4'}`;
+    const logoClass = `font-bold text-amber-700 ${shrink ? 'text-lg' : 'text-2xl'}`;
 
-                {/* --- Search Bar --- */}
-                <div className="flex-grow w-full lg:w-auto">
-                    <SearchBar 
-                        persons={persons} 
-                        onSelect={onSelect} 
-                        searchTerm={searchTerm}
-                        setSearchTerm={setSearchTerm}
-                    />
-                </div>
+    return (
+        <div className={headerClass} style={{position: 'sticky', top: 0, zIndex: 30}}>
+            <div className={`flex ${isMobile ? 'flex-row items-center gap-2' : 'flex-row items-center gap-4'}`}>
+                {/* Logo và tên trang */}
+                <span className={logoClass}>Gia Phả</span>
+                {/* Nút ẩn header */}
+                <button onClick={onHideHeader} title="Ẩn header" className="ml-2 p-1 rounded hover:bg-gray-100"><X size={20} /></button>
+                {/* Popup bộ lọc nâng cao */}
+                {showAdvancedFilters && (
+                    <div className="fixed top-20 right-8 z-50 bg-white border rounded-lg shadow-xl p-4 min-w-[220px]">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="font-semibold text-gray-700">Bộ lọc nâng cao</span>
+                            <button onClick={() => setShowAdvancedFilters(false)} className="text-gray-500 hover:text-gray-700"><X size={20} /></button>
+                        </div>
+                        {/* Các bộ lọc nâng cao: lọc theo cha, cột, v.v. */}
+                        <div className="mb-2">
+                            <span className="text-xs text-gray-500">Lọc theo tên cha</span>
+                            <div className="mt-1">
+                                <SearchableDropdown
+                                    options={persons.filter(p => p.fatherId)}
+                                    value={fatherFilter}
+                                    onSelect={setFatherFilter}
+                                    placeholder="Chọn tên cha..."
+                                    displayField="name"
+                                />
+                            </div>
+                        </div>
+                        <div className="mb-2">
+                            <span className="text-xs text-gray-500">Tùy chỉnh cột</span>
+                            <div className="flex flex-col gap-1 mt-1">
+                                {Object.keys(visibleColumns).map(col => (
+                                    <label key={col} className="flex items-center gap-2 text-xs">
+                                        <input type="checkbox" checked={visibleColumns[col]} onChange={() => setVisibleColumns(prev => ({ ...prev, [col]: !prev[col] }))} />
+                                        {col === 'fatherName' && 'Tên Cha'}
+                                        {col === 'birthDate' && 'Ngày sinh'}
+                                        {col === 'status' && 'Tình trạng'}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                        <button onClick={() => setShowAdvancedFilters(false)} className="mt-2 w-full py-1 rounded bg-amber-600 text-white text-sm">Đóng</button>
+                    </div>
+                )}
             </div>
         </div>
     );

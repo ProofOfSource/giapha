@@ -59,7 +59,9 @@ export default function FamilyManager({ user, personData }) {
     };
 
     const handleAddChildClick = () => {
+        console.log('handleAddChildClick called');
         setIsAddingChild(true);
+        console.log('setIsAddingChild(true) called after delay');
         // TODO: Open form/modal to add/link child
     };
 
@@ -150,6 +152,10 @@ export default function FamilyManager({ user, personData }) {
 
         fetchRelatives();
     }, [personData]);
+
+    useEffect(() => {
+        console.log('isAddingChild state changed:', isAddingChild);
+    }, [isAddingChild]);
 
     const handleSave = (updatedPerson) => {
         // Update the state to reflect the changes immediately

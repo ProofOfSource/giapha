@@ -16,7 +16,7 @@ export default function App() {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [page, setPage] = useState('landing');
+    const [page, setPage] = useState('tree');
     const [adminSubPage, setAdminSubPage] = useState('dashboard');
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
@@ -26,7 +26,7 @@ export default function App() {
             setUser(currentUser);
             if (!currentUser) {
                 setUserData(null);
-                setPage('landing'); // On logout, always return to landing page
+                // setPage('landing'); // On logout, always return to landing page
             }
         }, (err) => {
             setError(err);
@@ -130,7 +130,7 @@ export default function App() {
                             </>
                         ) : (
                             <>
-                                <button onClick={() => setPage('tree')} className="font-semibold text-amber-700 hover:text-amber-900">Xem Gia Phả</button>
+                                <button onClick={() => {console.log('Xem Gia Pha button clicked'); setPage('tree')}} className="font-semibold text-amber-700 hover:text-amber-900">Xem Gia Phả</button>
                                 <button onClick={() => setPage('stories')} className="font-semibold text-amber-700 hover:text-amber-900">Tin tức</button>
                                 <button onClick={() => setPage('auth')} className="bg-amber-700 hover:bg-amber-800 text-white font-bold py-2 px-4 rounded-full">Đăng nhập / Đăng ký</button>
                             </>

@@ -79,7 +79,7 @@ export default function EditPersonModal({ person, onClose, onSave, submissionMod
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4 transform-gpu">
-            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl border-2 border-blue-500" onClick={e => e.stopPropagation()}>
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Chỉnh sửa: {person.name}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

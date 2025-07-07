@@ -94,8 +94,22 @@ export default function AddOrLinkPersonModal({ onClose, onProposeChange, relatio
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4 transform-gpu">
-            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            zIndex: 50,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '1rem', // p-4 in tailwind
+            transform: 'translateZ(0)', // transform-gpu hint
+            border: '2px solid blue'
+        }} onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">
                     {relationshipType === 'father' ? 'Thêm Cha' :
                      relationshipType === 'mother' ? 'Thêm Mẹ' :

@@ -58,9 +58,8 @@ export const buildTree = (persons, unions) => {
     const personsWithGenerations = [];
     const flattenTree = (nodes) => {
         nodes.forEach(node => {
-            // Exclude spouses from the main list to avoid duplication
-            const { spouses, ...personData } = node;
-            personsWithGenerations.push(personData);
+            // Giữ nguyên trường spouses (là mảng id)
+            personsWithGenerations.push({ ...node });
             if (node.children.length > 0) {
                 flattenTree(node.children);
             }
@@ -79,7 +78,7 @@ export const buildTree = (persons, unions) => {
 
     let tree;
     if (rootNodes.length > 1) {
-        tree = { name: 'Gia Phả', children: rootNodes, generation: 0 };
+        tree = { id: 'root', name: 'Gia Phả', children: rootNodes, generation: 0 };
     } else {
         tree = rootNodes[0] || null;
     }

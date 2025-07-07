@@ -82,12 +82,19 @@ Lưu trữ thông tin của từng cá nhân trong gia phả.
 
 - **id**: (string) Document ID, định danh duy nhất.
 - **name**: (string) Họ và tên.
+- **nickname**: (string) Tên thường gọi.
 - **gender**: (string) `male` | `female` | `other`.
 - **birthDate**: (string) Ngày sinh (định dạng YYYY-MM-DD).
 - **deathDate**: (string) Ngày mất (định dạng YYYY-MM-DD, có thể null).
 - **isDeceased**: (boolean) Trạng thái còn sống/đã mất.
 - **fatherId**: (string) Document ID của người cha trong collection `persons`.
 - **motherId**: (string) Document ID của người mẹ trong collection `persons`.
+- **currentAddress**: (string) Nơi sinh sống hiện tại.
+- **contact**: (object) Thông tin liên hệ.
+    - **facebook**: (string) Tài khoản Facebook.
+    - **personalEmail**: (string) Email cá nhân.
+    - **phone**: (string) Số điện thoại.
+- **achievements**: (string) Thành tựu, thành tích nổi bật.
 - **profilePictureUrl**: (string) URL ảnh đại diện (lưu trên Firebase Storage).
 - **biography**: (string) Tiểu sử, ghi chú.
 - **generation**: (number) Số thứ tự thế hệ (đời).

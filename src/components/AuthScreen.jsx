@@ -82,13 +82,13 @@ const AuthScreen = () => {
             <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-xl">
                 <h2 className="text-3xl font-bold text-center text-amber-900">{isRegister ? 'Đăng ký Tài khoản' : 'Đăng nhập Gia phả'}</h2>
                 <div className="space-y-4">
-                    <button onClick={() => handleSocialLogin(new GoogleAuthProvider())} className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                    <button onClick={() => handleSocialLogin(new GoogleAuthProvider())} className="max-w-xs mx-auto flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
                         <GoogleIcon />
                         <span className="font-semibold text-gray-700">Đăng nhập với Google</span>
                     </button>
-                    <button onClick={() => handleSocialLogin(new FacebookAuthProvider())} className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-lg text-white bg-[#1877F2] hover:bg-[#166fe5] transition-colors">
+                    <button onClick={() => handleSocialLogin(new FacebookAuthProvider())} className="max-w-xs mx-auto flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors">
                         <FacebookIcon />
-                        <span className="font-semibold">Đăng nhập với Facebook</span>
+                        <span className="font-semibold text-gray-700">Đăng nhập với Facebook</span>
                     </button>
                 </div>
                 <div className="flex items-center">

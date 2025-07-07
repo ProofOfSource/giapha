@@ -33,9 +33,12 @@ const TabButton = ({ icon, label, isActive, onClick }) => (
     </button>
 );
 
+import { collection, onSnapshot } from "firebase/firestore";
+
 export const UserDashboard = ({ user }) => {
     const [userData, setUserData] = useState(null);
     const [personData, setPersonData] = useState(null);
+    const [allPersons, setAllPersons] = useState([]); // New state for all persons
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [view, setView] = useState('dashboard'); // 'dashboard' or 'tree'
@@ -72,6 +75,15 @@ export const UserDashboard = ({ user }) => {
         fetchData();
     }, [user, activeTab]); // Reload data when user changes or tab changes to get fresh info
 
+    // Fetch all persons
+    useEffect(() => {
+        const personsCollection = collection(db, 'persons');
+        const unsubscribe = onSnapshot(personsCollection, (snapshot) => {
+            setAllPersons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => unsubscribe();
+    }, []); // Empty dependency array means this runs once on mount
+
     if (view === 'tree') {
         return (
             <div className="relative h-screen">
@@ -90,7 +102,7 @@ export const UserDashboard = ({ user }) => {
     const renderActiveTab = () => {
         switch (activeTab) {
             case 'profile':
-                return <ProfileEditor user={user} userData={userData} personData={personData} />;
+                return <ProfileEditor user={user} userData={userData} personData={personData} allPersons={allPersons} />; {/* Pass allPersons */}
             case 'avatar':
                 return <AvatarManager user={user} userData={userData} />;
             case 'link':
